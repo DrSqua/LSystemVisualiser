@@ -33,7 +33,15 @@ private:
 
 };
 
-
+namespace std {
+    template <typename SymbolType> struct hash<Production<SymbolType>>
+{
+    size_t operator()(const Production<SymbolType> & production) const
+    {
+        return std::hash(production.predecessor);
+    }
+};
+}
 
 
 // This function verifies that all symbols in the production
