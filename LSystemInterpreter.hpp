@@ -16,10 +16,17 @@
 template <typename SymbolType>
 class Production {
 public:
+    Production(const SymbolType& predecessor, const SymbolType& successor);
 
+    bool operator==(const Production& other) const;
 private:
 
+    SymbolType predecessor;
+    SymbolType successor;
+
 };
+
+
 
 
 // This function verifies that all symbols in the production
@@ -35,7 +42,6 @@ bool isValidProduction(
         const Production<SymbolType>& production,
         const std::unordered_set<SymbolType>& alphabet
 );
-
 
 
 // This class represents the actual L-System.
@@ -95,5 +101,40 @@ public:
     // (The first and last A’s were replaced by AB,
     // and the middle B by A)
     std::vector<SymbolType> operator() () const;
+
+private:
+    std::vector<SymbolType> axiom;
+    std::unordered_set<Production<SymbolType>> productions;
+    std::unordered_set<SymbolType> alphabet;
+
+    std::vector<SymbolType> current_state;
 };
 
+// Implementation of template functions needs to be placed in header file instead of cpp file
+// c++ Does tricky things with templates, either we define their implementation here or we instantiate
+// the implementation for a specific type, we chose for the former as it is more scalable
+
+template<typename SymbolType>
+LSystemInterpreter<SymbolType>::LSystemInterpreter(const std::vector<SymbolType> &axiom,
+                                                   const std::unordered_set<Production<SymbolType>> &productions,
+                                                   const std::unordered_set<SymbolType> &alphabet):
+                                                   axiom(axiom), productions(productions), alphabet(alphabet), current_state(axiom) {
+
+}
+
+template<typename SymbolType>
+void LSystemInterpreter<SymbolType>::reset() {
+    this->current_state = this->axiom;
+}
+
+template<typename SymbolType>
+std::vector<SymbolType> LSystemInterpreter<SymbolType>::operator()() const {
+    return std::vector<SymbolType>();
+}
+
+
+template<typename SymbolType>
+bool isValidProduction(const Production<SymbolType> &production, const std::unordered_set<SymbolType> &alphabet) {
+    // Return if both predecessor and successor are both in alphabet set
+    return (alphabet.find(production.predecessor) != alphabet.end()) & (alphabet.find(production.successor) != alphabet.end());
+}
