@@ -6,6 +6,8 @@
 
 #include <vector>
 #include <unordered_set>
+#include <algorithm>
+#include <stdexcept>
 
 
 // This class represents a single production.
@@ -19,6 +21,15 @@ public:
     Production(const SymbolType& predecessor, const SymbolType& successor);
 
     bool operator==(const Production& other) const;
+
+    SymbolType getPredecessor() const {
+        return predecessor;
+    }
+
+    SymbolType getSuccessor() const {
+        return successor;
+    }
+
 private:
 
     SymbolType predecessor;
@@ -114,12 +125,27 @@ private:
 // c++ Does tricky things with templates, either we define their implementation here or we instantiate
 // the implementation for a specific type, we chose for the former as it is more scalable
 
+
+template<typename SymbolType>
+bool isValidProduction(const Production<SymbolType> &production, const std::unordered_set<SymbolType> &alphabet) {
+    // Return if both predecessor and successor are both in alphabet set
+    return (alphabet.find(production.getPredecessor()) != alphabet.end()) & (alphabet.find(production.getSuccessor()) != alphabet.end());
+}
+
+
 template<typename SymbolType>
 LSystemInterpreter<SymbolType>::LSystemInterpreter(const std::vector<SymbolType> &axiom,
                                                    const std::unordered_set<Production<SymbolType>> &productions,
                                                    const std::unordered_set<SymbolType> &alphabet):
-                                                   axiom(axiom), productions(productions), alphabet(alphabet), current_state(axiom) {
-
+                                                   axiom(axiom), alphabet(alphabet), current_state(axiom) {
+    // Loop productions and check if valid
+    for (const auto& production: productions) {
+        if (!isValidProduction(production, alphabet)) {
+            throw std::invalid_argument( "Any of productions is not valid" );
+        }
+    }
+    // If error was not thrown Assign productions
+    this->productions = productions;
 }
 
 template<typename SymbolType>
@@ -132,9 +158,3 @@ std::vector<SymbolType> LSystemInterpreter<SymbolType>::operator()() const {
     return std::vector<SymbolType>();
 }
 
-
-template<typename SymbolType>
-bool isValidProduction(const Production<SymbolType> &production, const std::unordered_set<SymbolType> &alphabet) {
-    // Return if both predecessor and successor are both in alphabet set
-    return (alphabet.find(production.predecessor) != alphabet.end()) & (alphabet.find(production.successor) != alphabet.end());
-}
