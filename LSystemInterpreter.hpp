@@ -1,7 +1,3 @@
-//
-// Created by robbe on 14/12/2023.
-//
-
 #pragma once
 
 #include <vector>
@@ -154,7 +150,28 @@ void LSystemInterpreter<SymbolType>::reset() {
 }
 
 template<typename SymbolType>
+SymbolType apply_productions(SymbolType value, std::unordered_set<Production<SymbolType>> productions) {
+    // First find the right production to apply
+    auto iter = productions.begin();
+    while (iter != productions.end()) {
+        if (iter->getPredecessor() == value) {
+            return iter->getSuccessor();
+        }
+        iter++;
+    }
+    return value;
+}
+
+template<typename SymbolType>
 std::vector<SymbolType> LSystemInterpreter<SymbolType>::operator()() const {
-    return std::vector<SymbolType>();
+    std::vector<SymbolType> result;
+
+    std::transform(this->current_state.begin(), this->current_state.end(), result.begin(),
+                   [this](SymbolType current_char){
+                       return apply_productions(current_char, this->productions);
+    });
+
+    this->current_state = result;
+    return this->current_state;
 }
 
