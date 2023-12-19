@@ -14,34 +14,40 @@
 template <typename SymbolType>
 class Production {
 public:
-    Production(const SymbolType& predecessor, const SymbolType& successor);
+    Production() = default;
 
-    bool operator==(const Production& other) const;
+    Production(const SymbolType& predecessor, const std::vector<SymbolType>& successor) : predecessor(predecessor), successor(successor) {
+
+    }
+
+    bool operator==(const Production &other) const {
+        return this->predecessor == other.predecessor;
+    };
 
     SymbolType getPredecessor() const {
         return predecessor;
     }
 
-    SymbolType getSuccessor() const {
+    std::vector<SymbolType> getSuccessor() const {
         return successor;
     }
 
-private:
-
     SymbolType predecessor;
-    SymbolType successor;
+    std::vector<SymbolType> successor;
 
 };
 
-namespace std {
-    template <typename SymbolType> struct hash<Production<SymbolType>>
-{
-    size_t operator()(const Production<SymbolType> & production) const
-    {
-        return std::hash(production.predecessor);
-    }
+
+
+// Defining std::hash implementation for type Production<SymbolType>
+template <typename SymbolType>
+struct std::hash<Production<SymbolType>> {
+
+    size_t operator()(const Production<SymbolType>& production) const {
+        return hash<SymbolType>{}(production.predecessor);
+        }
 };
-}
+
 
 
 // This function verifies that all symbols in the production
@@ -133,7 +139,15 @@ private:
 template<typename SymbolType>
 bool isValidProduction(const Production<SymbolType> &production, const std::unordered_set<SymbolType> &alphabet) {
     // Return if both predecessor and successor are both in alphabet set
-    return (alphabet.find(production.getPredecessor()) != alphabet.end()) & (alphabet.find(production.getSuccessor()) != alphabet.end());
+    // Check successor_valid with all_of iterator containing lambda
+    // Check predecessor seperately
+    // Evaluated by looping through alphabet, if iter==end then char is not found in alphabet
+
+    const auto successor = production.getSuccessor();
+    const bool successor_valid = std::all_of(successor.begin(), successor.end(), [&alphabet](const SymbolType v) {
+        return (alphabet.find(v) != alphabet.end());
+    });
+    return (alphabet.find(production.getPredecessor()) != alphabet.end()) & successor_valid;
 }
 
 
@@ -158,7 +172,7 @@ void LSystemInterpreter<SymbolType>::reset() {
 }
 
 template<typename SymbolType>
-SymbolType apply_productions(SymbolType value, std::unordered_set<Production<SymbolType>> productions) {
+std::vector<SymbolType> apply_productions(SymbolType value, std::unordered_set<Production<SymbolType>> productions) {
     // First find the right production to apply
     auto iter = productions.begin();
     while (iter != productions.end()) {
@@ -167,19 +181,18 @@ SymbolType apply_productions(SymbolType value, std::unordered_set<Production<Sym
         }
         iter++;
     }
-    return value;
+    return {value};
 }
 
 template<typename SymbolType>
 std::vector<SymbolType> LSystemInterpreter<SymbolType>::operator()() const {
-    std::vector<SymbolType> result;
+    std::vector<SymbolType> result;  // Define result vector with size minimum to current
 
-    std::transform(this->current_state.begin(), this->current_state.end(), result.begin(),
-                   [this](SymbolType current_char){
-                       return apply_productions(current_char, this->productions);
-    });
-
-    this->current_state = result;
-    return this->current_state;
+    result.reserve(this->current_state.size());
+    for (const auto& v : this->current_state) {
+        const std::vector<SymbolType> production_result = apply_productions(v, this->productions);
+        std::copy(production_result.begin(), production_result.end(), std::back_inserter(result));
+    }
+    //this->current_state = result;
+    return result;
 }
-
