@@ -93,3 +93,53 @@ TEST_CASE("Multiple Productions") {
     const std::vector<TestType> expected{"a", "b", "a", "a", "b",};
     CHECK(expected == results.at(0));
 }
+
+TEST_CASE("Multiple Productions and Iterations ( Algae example )") {
+    using TestType = std::string;
+
+    const std::vector<TestType> axiom = {"a"};
+    std::unordered_set<Production<TestType>> productions{
+            Production<TestType>("a", {"a", "b"}),
+            Production<TestType>("b", {"a"})
+    };
+    const std::unordered_set<TestType> alphabet{"a", "b"};
+
+    LSystemInterpreter<TestType> lsystem = LSystemInterpreter(axiom, productions, alphabet);
+    std::vector<std::vector<TestType>> results(5);
+
+    std::generate(results.begin(), results.end(), lsystem);
+
+    const std::vector<TestType> expected_first{"a", "b"};
+    const std::vector<TestType> expected_second{"a", "b", "a"};
+    const std::vector<TestType> expected_third{"a", "b", "a", "a", "b"};
+    const std::vector<TestType> expected_fourth{"a", "b", "a", "a", "b", "a", "b", "a"};
+    const std::vector<TestType> expected_fifth{"a", "b", "a", "a", "b", "a", "b", "a", "a", "b", "a", "a", "b"};
+    CHECK(expected_first  == results.at(0));
+    CHECK(expected_second == results.at(1));
+    CHECK(expected_third  == results.at(2));
+    CHECK(expected_fourth == results.at(3));
+    CHECK(expected_fifth  == results.at(4));
+}
+
+TEST_CASE("Other types") {
+    using TestType = char;
+
+    const std::vector<TestType> axiom = {'a', 'b', 'a'};
+    std::unordered_set<Production<TestType>> productions{
+            Production<TestType>('a', {'a', 'b'}),
+            Production<TestType>('b', {'a'})
+    };
+    const std::unordered_set<TestType> alphabet{'a', 'b'};
+
+    LSystemInterpreter<TestType> lsystem = LSystemInterpreter(axiom, productions, alphabet);
+    std::vector<std::vector<TestType>> results(3);
+
+    std::generate(results.begin(), results.end(), lsystem);
+
+    const std::vector<TestType> expected_first{'a', 'b', 'a', 'a', 'b'};
+    const std::vector<TestType> expected_second{'a', 'b', 'a', 'a', 'b', 'a', 'b', 'a'};
+    const std::vector<TestType> expected_third{'a', 'b', 'a', 'a', 'b', 'a', 'b', 'a', 'a', 'b', 'a', 'a', 'b'};
+    CHECK(expected_first == results.at(0));
+    CHECK(expected_second == results.at(1));
+    CHECK(expected_third == results.at(2));
+}
