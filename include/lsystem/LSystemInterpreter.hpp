@@ -128,7 +128,7 @@ private:
     std::unordered_set<Production<SymbolType>> productions;
     std::unordered_set<SymbolType> alphabet;
 
-    std::vector<SymbolType> current_state;
+    mutable std::vector<SymbolType> current_state;
 };
 
 // Implementation of template functions needs to be placed in header file instead of cpp file
@@ -193,6 +193,7 @@ std::vector<SymbolType> LSystemInterpreter<SymbolType>::operator()() const {
         const std::vector<SymbolType> production_result = apply_productions(v, this->productions);
         std::copy(production_result.begin(), production_result.end(), std::back_inserter(result));
     }
-    //this->current_state = result;
+
+    this->current_state = result;
     return result;
 }
