@@ -103,7 +103,8 @@ int main() {
                 state_string += " " + substring;
             }
             const char* stats_char = state_string.c_str();
-            DrawText(stats_char, 4, 50, 16, DARKGRAY);
+            DrawTextEx(GetFontDefault() ,stats_char, {4.0, 50.0},
+                       16.0f * powf(0.9, static_cast<float>(current_state_index)), 0.5, DARKGRAY);
 
             //! Root
             DrawRectangleV(
