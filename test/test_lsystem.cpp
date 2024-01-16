@@ -22,6 +22,15 @@ TEST_CASE("Test Is valid production function") {
     CHECK(  isValidProduction(valid_production, alphabet));
 }
 
+TEST_CASE("Test Valid Production weird input") {
+    using TestType = std::string;
+
+    const auto invalid_production = Production<TestType>("", {"n", "o"});
+    const std::unordered_set<TestType> alphabet{};
+
+    CHECK(! isValidProduction(invalid_production, alphabet));
+}
+
 TEST_CASE("Constructor") {
     using TestType = std::string;
 
@@ -33,10 +42,6 @@ TEST_CASE("Constructor") {
     const std::unordered_set<TestType> alphabet{"f", "o"};
 
     LSystemInterpreter<TestType> lsystem = LSystemInterpreter(axiom, productions, alphabet);
-}
-
-TEST_CASE("Identity for character not in production") {
-    // TODO
 }
 
 TEST_CASE("One Iteration") {
@@ -142,4 +147,26 @@ TEST_CASE("Other types") {
     CHECK(expected_first == results.at(0));
     CHECK(expected_second == results.at(1));
     CHECK(expected_third == results.at(2));
+}
+
+TEST_CASE("Reset") {
+    using TestType = std::string;
+    
+    const std::vector<TestType> axiom = {"a"};
+    std::unordered_set<Production<TestType>> productions{
+            Production<TestType>("a", {"a", "b"}),
+            Production<TestType>("b", {"a"})
+    };
+    const std::unordered_set<TestType> alphabet{"a", "b"};
+    LSystemInterpreter<TestType> lsystem = LSystemInterpreter(axiom, productions, alphabet);
+
+    std::vector<std::vector<TestType>> results(2);
+    std::generate(results.begin(), results.end() - 1, lsystem);
+
+    lsystem.reset();
+    std::generate(results.begin() + 1, results.end(), lsystem);
+
+    const std::vector<TestType> expected{"a", "b"};
+    CHECK(expected == results.at(0));
+    CHECK(expected == results.at(1));
 }
